@@ -1,43 +1,18 @@
-const router = require('express').Router();     // Create a new Express router instance
-const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth.js');
-const { User } = require('../../db/models');
-
-// Test route to check if API router is working
-router.post('/test', function(req, res) {      // Define a POST endpoint at /api/test
-  res.json({ requestBody: req.body });         // Echo back the request body as JSON
-});
-
-// GET /api/set-token-cookie
-router.get('/set-token-cookie', async (_req, res) => {
-  const user = await User.findOne({
-    where: {
-      username: 'Demo-lition'
-    }
-  });
-  setTokenCookie(res, user);
-  return res.json({ user: user });
-});
+const router = require('express').Router();            // Create main API router
+const sessionRouter = require('./session.js');         // Import session router
+const usersRouter = require('./users.js');             // Import users router
+const { restoreUser } = require("../../utils/auth.js"); // Import auth middleware
 
 // Connect restoreUser middleware to the API router
 // If current user session is valid, set req.user to the user in the database
 // If current user session is not valid, set req.user to null
-router.use(restoreUser);
+router.use(restoreUser);                               // Apply restoreUser to all API routes
 
-// GET /api/restore-user
-router.get(
-  '/restore-user',
-  (req, res) => {
-    return res.json(req.user);
-  }
-);
+router.use('/session', sessionRouter);                 // Mount session router at /api/session
+router.use('/users', usersRouter);                     // Mount users router at /api/users
 
-// GET /api/require-auth
-router.get(
-  '/require-auth',
-  requireAuth,
-  (req, res) => {
-    return res.json(req.user);
-  }
-);
+router.post('/test', (req, res) => {                   // Test route (can be removed later)
+  res.json({ requestBody: req.body });
+});
 
-module.exports = router;                        // Export the router for use in other files
+module.exports = router;
