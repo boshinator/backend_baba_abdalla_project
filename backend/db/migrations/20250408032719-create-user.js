@@ -6,42 +6,44 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Users', {
+  async up(queryInterface, Sequelize) {
+    options.tableName = "Users";
+    await queryInterface.createTable(options.tableName, {
       id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
+        allowNull: false,                           // id cannot be null
+        autoIncrement: true,                        // auto-increment the id
+        primaryKey: true,                           // define id as the primary key
         type: Sequelize.INTEGER
       },
       username: {
-        type: Sequelize.STRING(30),
-        allowNull: false,
-        unique: true
+        type: Sequelize.STRING(30),                 // restrict to 30 characters
+        allowNull: false,                           // username is required
+        unique: true                                // username must be unique
       },
       email: {
-        type: Sequelize.STRING(256),
-        allowNull: false,
-        unique: true
+        type: Sequelize.STRING(256),                // restrict to 256 characters (RFC 5321 limit)
+        allowNull: false,                           // email is required
+        unique: true                                // email must be unique
       },
       hashedPassword: {
-        type: Sequelize.STRING.BINARY,
-        allowNull: false
+        type: Sequelize.STRING.BINARY,              // binary string for hashed password
+        allowNull: false                            // password is required
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')  // auto-set creation date
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')  // auto-set update date
       }
     }, options);
   },
-  down: async (queryInterface, Sequelize) => {
+
+  async down(queryInterface, Sequelize) {
     options.tableName = "Users";
-    return queryInterface.dropTable(options);
+    return queryInterface.dropTable(options);      // for undoing the migration
   }
 };

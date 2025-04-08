@@ -8,17 +8,23 @@ const { secret, expiresIn } = jwtConfig;
 // Send a JWT Cookie
 const setTokenCookie = (res, user) => {
   // Create the token
+  const safeUser = {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+  };
+  
   const token = jwt.sign(
-    { data: user.toSafeObject() },
+    { data: safeUser },
     secret,
-    { expiresIn: parseInt(expiresIn) } // 604,800 seconds = 1 week
+    { expiresIn: parseInt(expiresIn) }
   );
 
   const isProduction = process.env.NODE_ENV === "production";
 
   // Set the token cookie
   res.cookie('token', token, {
-    maxAge: expiresIn * 1000, // maxAge in milliseconds
+    maxAge: expiresIn * 1000,
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction && "Lax"
@@ -40,7 +46,11 @@ const restoreUser = (req, res, next) => {
 
     try {
       const { id } = jwtPayload.data;
-      req.user = await User.getCurrentUserById(id);
+      req.user = await User.findByPk(id, {
+        attributes: {
+          include: ['email', 'createdAt', 'updatedAt']
+        }
+      });
     } catch (e) {
       res.clearCookie('token');
       return next();
