@@ -51,6 +51,8 @@ router.post(
       id: user.id,
       email: user.email,
       username: user.username,
+      firstName: user.firstName,                 // Include firstName
+      lastName: user.lastName                    // Include lastName
     };
 
     // Set the JWT cookie
@@ -68,18 +70,24 @@ router.delete('/', (_req, res) => {            // DELETE /api/session endpoint
   return res.json({ message: 'success' });     // Return success message
 });
 
-router.get('/', (req, res) => {                 // GET /api/session endpoint
-  const { user } = req;                         // Get user from request object
-  if (user) {
-    const safeUser = {                          // Create safe user object
-      id: user.id,
-      email: user.email,
-      username: user.username,
-    };
-    return res.json({
-      user: safeUser                           // Return user data if logged in
-    });
-  } else return res.json({ user: null });       // Return null if not logged in
-});
+// Restore session user
+router.get(
+  '/',
+  (req, res) => {
+    const { user } = req;
+    if (user) {
+      const safeUser = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        firstName: user.firstName,               // Include firstName
+        lastName: user.lastName                  // Include lastName
+      };
+      return res.json({
+        user: safeUser
+      });
+    } else return res.json({ user: null });
+  }
+);
 
 module.exports = router;           

@@ -13,8 +13,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     toSafeObject() {
-      const { id, username, email } = this; // context will be the User instance
-      return { id, username, email };
+      const { id, username, email, firstName, lastName } = this; // Add new fields to safe object
+      return { id, username, email, firstName, lastName };
     }
 
     validatePassword(password) {
@@ -40,12 +40,14 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
 
-    static async signup({ username, email, password }) {
+    static async signup({ username, email, password, firstName, lastName }) {  // Add new fields to signup
       const hashedPassword = bcrypt.hashSync(password);
       const user = await User.create({
         username,
         email,
-        hashedPassword
+        hashedPassword,
+        firstName,                // Include firstName in creation
+        lastName                 // Include lastName in creation
       });
       return await User.scope('currentUser').findByPk(user.id);
     }
@@ -83,13 +85,21 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: [60, 60]
       }
+    },
+    firstName: {                             // Add firstName attribute
+      type: DataTypes.STRING,
+      allowNull: true,                      // Optional field
+    },
+    lastName: {                              // Add lastName attribute
+      type: DataTypes.STRING,
+      allowNull: true,                      // Optional field
     }
   }, {
     sequelize,
     modelName: 'User',
     defaultScope: {
       attributes: {
-        exclude: ['hashedPassword', 'email', 'createdAt', 'updatedAt']
+        exclude: ['hashedPassword', 'createdAt', 'updatedAt']
       }
     },
     scopes: {
