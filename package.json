@@ -4,7 +4,7 @@
   "description": "Baba Abdalla Project",
   "main": "index.js",
   "scripts": {
-    "build": "cd backend && npm install && npm run build",
+    "build": "cd backend && npm install && npm run migrate:production && node psql-setup-script.js",
     "start": "cd backend && npm start",
     "migrate:production": "cd backend && npm run migrate:production",
     "seed:production": "cd backend && npm run seed:production",
