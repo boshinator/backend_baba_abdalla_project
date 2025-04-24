@@ -4,9 +4,10 @@
   "description": "Baba Abdalla Project",
   "main": "index.js",
   "scripts": {
+    "prebuild": "cd backend && node -e \"process.env.NODE_ENV='production'; process.env.SCHEMA='public';\"",
     "build": "cd backend && npm install && npm run migrate:production && node psql-setup-script.js",
     "start": "cd backend && npm start",
-    "migrate:production": "cd backend && npm run migrate:production",
+    "migrate:production": "cd backend && NODE_ENV=production SCHEMA=public npx sequelize-cli db:migrate",
     "seed:production": "cd backend && npm run seed:production",
     "postinstall": "cd backend && npm install"
   },
