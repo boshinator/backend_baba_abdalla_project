@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www",
     "sequelize": "sequelize",
     "sequelize-cli": "sequelize-cli",
+    "start": "node ./bin/www",
+    "dev": "nodemon ./bin/www",
     "migrate": "dotenv sequelize-cli db:migrate",
     "migrate:reset": "dotenv sequelize-cli db:migrate:undo:all && npm run migrate",
     "migrate:production": "sequelize-cli db:migrate --env production",
@@ -32,13 +32,14 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "per-env": "^1.0.2",
-    "pg": "^8.14.1",
-    "sequelize": "^6.37.7",
-    "sequelize-cli": "^6.6.2"
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.1",
+    "sqlite3": "^5.1.7",
+    "umzug": "^3.7.0"
   },
   "devDependencies": {
-    "dotenv-cli": "^8.0.0",
-    "nodemon": "^3.1.9",
-    "sqlite3": "^5.1.7"
+    "nodemon": "^3.1.0",
+    "sequelize-cli": "^6.6.2"
   }
 }
