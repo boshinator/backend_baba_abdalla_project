@@ -12,7 +12,7 @@
     "migrate:reset": "dotenv sequelize-cli db:migrate:undo:all && npm run migrate",
     "migrate:production": "sequelize-cli db:migrate --env production",
     "seed": "dotenv sequelize-cli db:seed:all",
-    "seed:production": "sequelize-cli db:seed:all --env production",
+    "seed:production": "npx sequelize-cli db:seed:all --env production",
     "build": "node psql-setup-script.js"
   },
   "keywords": [],
