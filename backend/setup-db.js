@@ -2,6 +2,7 @@ const { sequelize } = require('./db/models');
 const { User } = require('./db/models');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 async function setupDatabase() {
   try {
@@ -78,6 +79,26 @@ async function setupDatabase() {
     } catch (columnError) {
       console.error('Error checking/adding columns:', columnError);
       // Continue execution even if this fails
+    }
+    
+    // Run seeds if requested
+    if (process.env.RUN_SEEDS === 'true') {
+      console.log('Running seeds...');
+      try {
+        // Change to the backend directory
+        process.chdir(path.join(__dirname));
+        
+        // Run seeds using npx
+        execSync('npx sequelize-cli db:seed:all --env production', { 
+          stdio: 'inherit',
+          env: { ...process.env, NODE_ENV: 'production' }
+        });
+        
+        console.log('Seeds completed successfully');
+      } catch (seedError) {
+        console.error('Error running seeds:', seedError);
+        // Continue execution even if seeding fails
+      }
     }
     
     console.log('Database setup completed successfully');

@@ -5,10 +5,9 @@
   "main": "index.js",
   "scripts": {
     "prebuild": "cd backend && node -e \"process.env.NODE_ENV='production'; process.env.SCHEMA='public';\"",
-    "build": "cd backend && npm install && FORCE_SYNC=true node setup-db.js",
+    "build": "cd backend && npm install && FORCE_SYNC=true RUN_SEEDS=true node setup-db.js",
     "start": "cd backend && npm start",
     "migrate:production": "cd backend && node setup-db.js",
-    "seed:production": "cd backend && npx sequelize-cli db:seed:all --env production",
     "postinstall": "cd backend && npm install"
   },
   "keywords": [],
