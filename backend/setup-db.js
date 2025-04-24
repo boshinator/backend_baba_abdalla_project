@@ -3,6 +3,7 @@ const { User } = require('./db/models');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const bcrypt = require('bcryptjs');
 
 async function setupDatabase() {
   try {
@@ -83,59 +84,33 @@ async function setupDatabase() {
     
     // Run seeds if requested
     if (process.env.RUN_SEEDS === 'true') {
-      console.log('Running seeds...');
+      console.log('Running seeds directly using Sequelize models...');
       try {
-        // Change to the backend directory
-        process.chdir(path.join(__dirname));
-        
-        // Create a temporary .sequelizerc file to set the correct schema
-        const sequelizercPath = path.join(__dirname, '.sequelizerc');
-        const sequelizercContent = `
-module.exports = {
-  'config': path.resolve('config', 'database.js'),
-  'models-path': path.resolve('db', 'models'),
-  'seeders-path': path.resolve('db', 'seeders'),
-  'migrations-path': path.resolve('db', 'migrations')
-};
-`;
-        fs.writeFileSync(sequelizercPath, sequelizercContent);
-        console.log('Created temporary .sequelizerc file');
-        
-        // Create a temporary config file for seeding
-        const configPath = path.join(__dirname, 'config', 'seed-config.js');
-        const configContent = `
-module.exports = {
-  production: {
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    dialect: 'postgres',
-    schema: '${schemaName}'
-  }
-};
-`;
-        // Ensure the config directory exists
-        if (!fs.existsSync(path.join(__dirname, 'config'))) {
-          fs.mkdirSync(path.join(__dirname, 'config'));
-        }
-        fs.writeFileSync(configPath, configContent);
-        console.log('Created temporary seed config file');
-        
-        // Run seeds using npx with the custom config
-        execSync(`npx sequelize-cli db:seed:all --env production --config ${configPath}`, { 
-          stdio: 'inherit',
-          env: { ...process.env, NODE_ENV: 'production', SCHEMA: schemaName }
+        // Check if we already have a demo user
+        const existingUser = await User.findOne({
+          where: { email: 'demo@example.com' }
         });
         
-        console.log('Seeds completed successfully');
+        if (!existingUser) {
+          console.log('Creating demo user...');
+          const hashedPassword = await bcrypt.hash('password', 10);
+          
+          await User.create({
+            email: 'demo@example.com',
+            username: 'DemoUser',
+            hashedPassword,
+            firstName: 'Demo',
+            lastName: 'User'
+          });
+          
+          console.log('Demo user created successfully');
+        } else {
+          console.log('Demo user already exists, skipping creation');
+        }
         
-        // Clean up temporary files
-        fs.unlinkSync(sequelizercPath);
-        fs.unlinkSync(configPath);
-        console.log('Cleaned up temporary files');
+        console.log('Seeds completed successfully');
       } catch (seedError) {
-        console.error('Error running seeds:', seedError);
+        console.error('Error running seeds directly:', seedError);
         // Continue execution even if seeding fails
       }
     }
