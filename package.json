@@ -8,6 +8,7 @@
     "build": "cd backend && npm install && FORCE_SYNC=true RUN_SEEDS=true node setup-db.js",
     "start": "cd backend && npm start",
     "migrate:production": "cd backend && node setup-db.js",
+    "seed:production": "cd backend && node setup-db.js",
     "postinstall": "cd backend && npm install"
   },
   "keywords": [],
