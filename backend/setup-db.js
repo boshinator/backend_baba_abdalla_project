@@ -1,5 +1,5 @@
 const { sequelize } = require('./db/models');
-const { execSync } = require('child_process');
+const { User } = require('./db/models');
 const path = require('path');
 const fs = require('fs');
 
@@ -26,63 +26,58 @@ async function setupDatabase() {
     await sequelize.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}";`);
     console.log(`Schema "${schemaName}" created successfully`);
     
-    // Check if migrations directory exists
-    const migrationsDir = path.join(__dirname, 'db', 'migrations');
-    if (!fs.existsSync(migrationsDir)) {
-      console.error(`Migrations directory not found: ${migrationsDir}`);
-      throw new Error(`Migrations directory not found: ${migrationsDir}`);
+    // Direct approach: Create tables using Sequelize sync
+    console.log('Creating tables directly using Sequelize sync...');
+    
+    // Force sync will drop and recreate all tables
+    // This is destructive, so we only do it in development or when explicitly requested
+    const forceSync = process.env.FORCE_SYNC === 'true';
+    
+    if (forceSync) {
+      console.log('FORCE_SYNC is true, dropping and recreating all tables...');
+      await sequelize.sync({ force: true });
+    } else {
+      // Just create tables if they don't exist
+      await sequelize.sync();
     }
     
-    // List migration files
-    const migrationFiles = fs.readdirSync(migrationsDir);
-    console.log('Migration files:', migrationFiles);
+    console.log('Tables created successfully');
     
-    // Run migrations directly using sequelize-cli
-    console.log('Running migrations...');
+    // Check if we need to add firstName and lastName columns to Users table
     try {
-      // Change to the backend directory
-      process.chdir(path.join(__dirname));
+      // Check if the columns exist
+      const tableInfo = await sequelize.query(
+        `SELECT column_name FROM information_schema.columns 
+         WHERE table_schema = '${schemaName}' 
+         AND table_name = 'Users' 
+         AND column_name IN ('firstName', 'lastName');`
+      );
       
-      // Check if sequelize-cli is installed
-      try {
-        execSync('npx sequelize-cli --version', { stdio: 'inherit' });
-      } catch (versionError) {
-        console.error('Error checking sequelize-cli version:', versionError);
-        console.log('Installing sequelize-cli...');
-        execSync('npm install -g sequelize-cli', { stdio: 'inherit' });
+      const existingColumns = tableInfo[0].map(col => col.column_name);
+      console.log('Existing columns in Users table:', existingColumns);
+      
+      // Add firstName column if it doesn't exist
+      if (!existingColumns.includes('firstName')) {
+        console.log('Adding firstName column to Users table...');
+        await sequelize.query(
+          `ALTER TABLE "${schemaName}"."Users" 
+           ADD COLUMN IF NOT EXISTS "firstName" VARCHAR(255);`
+        );
+        console.log('firstName column added successfully');
       }
       
-      // Try to run migrations with more detailed error output
-      console.log('Running migrations with detailed output...');
-      execSync('npx sequelize-cli db:migrate --env production --debug', { 
-        stdio: 'inherit',
-        env: { ...process.env, DEBUG: 'sequelize:*' }
-      });
-      
-      console.log('Migrations completed successfully');
-    } catch (migrationError) {
-      console.error('Error running migrations:', migrationError);
-      
-      // Try an alternative approach - run migrations directly using Sequelize
-      console.log('Trying alternative approach - running migrations directly...');
-      try {
-        // Import and run migrations directly
-        const { Umzug, SequelizeStorage } = require('umzug');
-        const umzug = new Umzug({
-          migrations: {
-            path: migrationsDir,
-            params: [sequelize.getQueryInterface(), sequelize.constructor]
-          },
-          storage: new SequelizeStorage({ sequelize }),
-          logger: console
-        });
-        
-        await umzug.up();
-        console.log('Migrations completed successfully using alternative approach');
-      } catch (directMigrationError) {
-        console.error('Error running migrations directly:', directMigrationError);
-        throw directMigrationError;
+      // Add lastName column if it doesn't exist
+      if (!existingColumns.includes('lastName')) {
+        console.log('Adding lastName column to Users table...');
+        await sequelize.query(
+          `ALTER TABLE "${schemaName}"."Users" 
+           ADD COLUMN IF NOT EXISTS "lastName" VARCHAR(255);`
+        );
+        console.log('lastName column added successfully');
       }
+    } catch (columnError) {
+      console.error('Error checking/adding columns:', columnError);
+      // Continue execution even if this fails
     }
     
     console.log('Database setup completed successfully');
