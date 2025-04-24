@@ -11,10 +11,10 @@ async function setupDatabase() {
     // Force NODE_ENV to production
     process.env.NODE_ENV = 'production';
     
-    // Set schema to public if not already set
+    // Set schema to baba_abdalla_project if not already set
     if (!process.env.SCHEMA) {
-      process.env.SCHEMA = 'public';
-      console.log('Setting SCHEMA to public');
+      process.env.SCHEMA = 'baba_abdalla_project';
+      console.log('Setting SCHEMA to baba_abdalla_project');
     }
     
     // Show all schemas
@@ -88,13 +88,52 @@ async function setupDatabase() {
         // Change to the backend directory
         process.chdir(path.join(__dirname));
         
-        // Run seeds using npx
-        execSync('npx sequelize-cli db:seed:all --env production', { 
+        // Create a temporary .sequelizerc file to set the correct schema
+        const sequelizercPath = path.join(__dirname, '.sequelizerc');
+        const sequelizercContent = `
+module.exports = {
+  'config': path.resolve('config', 'database.js'),
+  'models-path': path.resolve('db', 'models'),
+  'seeders-path': path.resolve('db', 'seeders'),
+  'migrations-path': path.resolve('db', 'migrations')
+};
+`;
+        fs.writeFileSync(sequelizercPath, sequelizercContent);
+        console.log('Created temporary .sequelizerc file');
+        
+        // Create a temporary config file for seeding
+        const configPath = path.join(__dirname, 'config', 'seed-config.js');
+        const configContent = `
+module.exports = {
+  production: {
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    dialect: 'postgres',
+    schema: '${schemaName}'
+  }
+};
+`;
+        // Ensure the config directory exists
+        if (!fs.existsSync(path.join(__dirname, 'config'))) {
+          fs.mkdirSync(path.join(__dirname, 'config'));
+        }
+        fs.writeFileSync(configPath, configContent);
+        console.log('Created temporary seed config file');
+        
+        // Run seeds using npx with the custom config
+        execSync(`npx sequelize-cli db:seed:all --env production --config ${configPath}`, { 
           stdio: 'inherit',
-          env: { ...process.env, NODE_ENV: 'production' }
+          env: { ...process.env, NODE_ENV: 'production', SCHEMA: schemaName }
         });
         
         console.log('Seeds completed successfully');
+        
+        // Clean up temporary files
+        fs.unlinkSync(sequelizercPath);
+        fs.unlinkSync(configPath);
+        console.log('Cleaned up temporary files');
       } catch (seedError) {
         console.error('Error running seeds:', seedError);
         // Continue execution even if seeding fails

@@ -4,7 +4,7 @@
   "description": "Baba Abdalla Project",
   "main": "index.js",
   "scripts": {
-    "prebuild": "cd backend && node -e \"process.env.NODE_ENV='production'; process.env.SCHEMA='public';\"",
+    "prebuild": "cd backend && node -e \"process.env.NODE_ENV='production'; process.env.SCHEMA='baba_abdalla_project';\"",
     "build": "cd backend && npm install && FORCE_SYNC=true RUN_SEEDS=true node setup-db.js",
     "start": "cd backend && npm start",
     "migrate:production": "cd backend && node setup-db.js",
